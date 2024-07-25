@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storage Contract Interaction</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Storage Contract Interaction</h1>
+    <div>
+        <h2>Store a Value</h2>
+        <input type="number" id="valueToStore" placeholder="Enter value to store">
+        <button onclick="storeValue()">Store Value</button>
+    </div>
+    <div>
+        <h2>View Stored Value</h2>
+        <button onclick="viewStoredValue()">View Value</button>
+        <p id="storedValue"></p>
+    </div>
+    <form action="/main" method="post">
+        <p><input type="submit" value="Main"></p>
+    </form>
+    <form action="/" method="post">
+        <p><input type="submit" value="Login Page"></p>
+    </form>
+
+    <script>
+        // Ensure you are connected to an Ethereum node
+        if (typeof window.ethereum !== 'undefined') {
+            console.log('MetaMask is installed!');
+            var web3 = new Web3(window.ethereum);
+            window.ethereum.enable(); // Request access to the user's Ethereum account
+        } else {
+            console.log('MetaMask is not installed. Please install MetaMask to use this application.');
+        }
+
+        // Replace with your contract's ABI
+        const contractABI = [
+            {
+                "inputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "num",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "store",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "view_money",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // Replace with your contract's address
+        const contractAddress = '0xCA4BcFBc85aa55F7417D9AfFBa8A94375FC9B574';
+
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Function to store a value in the smart contract
+        async function storeValue() {
+            const value = document.getElementById('valueToStore').value;
+            const accounts = await web3.eth.getAccounts();
+            contract.methods.store(value).send({ from: accounts[0] })
+                .on('receipt', function(receipt) {
+                    console.log('Value stored successfully');
+                })
+                .on('error', function(error) {
+                    console.error('Error storing value:', error);
+                });
+        }
+
+        // Function to view the stored value in the smart contract
+        async function viewStoredValue() {
+            try {
+                const value = await contract.methods.view_money().call();
+                document.getElementById('storedValue').innerText = value;
+            } catch (error) {
+                console.error('Error fetching stored value:', error);
+                document.getElementById('storedValue').innerText = 'Error fetching value';
+            }
+        }
+    </script>
+</body>
+</html>
